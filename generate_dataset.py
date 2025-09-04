@@ -11,7 +11,7 @@ binary_labels = {0: "Non-Flyer", 1: "Flyer"}
 """
 
 
-def build_dataset(coverage_treshold = 20, min_peptide = 4, f_name='out_df.csv',input_path=None, label_type='Binary'):
+def build_dataset(coverage_treshold, min_peptide, output_dataset_train_path,output_dataset_test_path,input_path, label_type,frac_split,frac_no_fly_train,frac_no_fly_test,manual_seed):
     df = pd.read_excel('ISA_data/250326_gut_microbiome_std_17_proteomes_data_training_detectability.xlsx')
     df_non_flyer = pd.read_csv('ISA_data/250422_FASTA_17_proteomes_gut_std_ozyme_+_conta_peptides_digested_filtered.csv')
     #No flyer
@@ -53,13 +53,36 @@ def build_dataset(coverage_treshold = 20, min_peptide = 4, f_name='out_df.csv',i
 
                 dico_final[seq[i]] = label_maxlfq
 
-        df_final = pd.DataFrame.from_dict(dico_final, orient='index',
+        df_flyer = pd.DataFrame.from_dict(dico_final, orient='index',
                                           columns=['Classes MaxLFQ'])
-        df_final['Sequences'] = df_final.index
-        df_final = df_final.reset_index()
-        df_final = df_final[['Sequences', 'Classes MaxLFQ']]
-        df_final.to_csv(f_name, index=False)
-        df_non_flyer.to_csv('ISA_data/df_non_flyer_no_miscleavage.csv', index=False)
+        df_flyer['Sequences'] = df_flyer.index
+        df_flyer = df_flyer.reset_index()
+        df_flyer = df_flyer[['Sequences', 'Classes MaxLFQ']]
+
+        # stratified split
+        list_train_split = []
+        list_val_split = []
+        total_count = 0
+        for cl in [1, 2, 3]:
+            df_class = df_flyer[df_flyer['Classes MaxLFQ'] == cl]
+            class_count = df_class.shape[0]
+            list_train_split.append(df_class.iloc[:int(class_count * frac_split[0]), :])
+            list_val_split.append(df_class.iloc[int(class_count * frac_split[0]):, :])
+            total_count += class_count
+        total_count = total_count / 3
+        list_train_split.append(df_non_flyer.iloc[:int(total_count * frac_split[0] * frac_no_fly_train), :])
+        list_val_split.append(
+            df_non_flyer.iloc[df_non_flyer.shape[0] - int(total_count * frac_split[1] * frac_no_fly_test):, :])
+
+        df_train = pd.concat(list_train_split).sample(frac=1, random_state=manual_seed)  # shuffle
+        df_test = pd.concat(list_val_split).sample(frac=1, random_state=manual_seed)  # shuffle
+
+        df_train['Proteins'] = 0
+        df_test['Proteins'] = 0
+        df_train.to_csv(output_dataset_train_path, index=False)
+        df_test.to_csv(output_dataset_test_path, index=False)
+
+
 
     elif label_type=='Binary':
 
@@ -77,13 +100,31 @@ def build_dataset(coverage_treshold = 20, min_peptide = 4, f_name='out_df.csv',i
 
                 dico_final[seq[i]] = label_maxlfq
 
-        df_final = pd.DataFrame.from_dict(dico_final, orient='index',
+        df_flyer = pd.DataFrame.from_dict(dico_final, orient='index',
                                           columns=['Classes MaxLFQ'])
-        df_final['Sequences'] = df_final.index
-        df_final = df_final.reset_index()
-        df_final = df_final[['Sequences', 'Classes MaxLFQ']]
-        df_final.to_csv(f_name, index=False)
-        df_non_flyer.to_csv('ISA_data/df_non_flyer_no_miscleavage.csv', index=False)
+        df_flyer['Sequences'] = df_flyer.index
+        df_flyer = df_flyer.reset_index()
+        df_flyer = df_flyer[['Sequences', 'Classes MaxLFQ']]
+
+
+        #split
+        list_train_split = []
+        list_val_split = []
+        flyer_count = df_flyer.shape[0]
+        list_train_split.append(df_flyer.iloc[:int(flyer_count * frac_split[0]), :])
+        list_val_split.append(df_flyer.iloc[int(flyer_count * frac_split[0]):, :])
+        list_train_split.append(df_non_flyer.iloc[:int(flyer_count * frac_split[0] * frac_no_fly_train), :])
+        list_val_split.append(
+            df_non_flyer.iloc[df_non_flyer.shape[0] - int(flyer_count * frac_split[1] * frac_no_fly_test):, :])
+
+        df_train = pd.concat(list_train_split).sample(frac=1, random_state=manual_seed)  # shuffle
+        df_test = pd.concat(list_val_split).sample(frac=1, random_state=manual_seed)
+
+
+
+        df_train.to_csv(output_dataset_train_path, index=False)
+        df_test.to_csv(output_dataset_test_path, index=False)
+
 
 
     elif label_type=='Regression':
@@ -98,13 +139,30 @@ def build_dataset(coverage_treshold = 20, min_peptide = 4, f_name='out_df.csv',i
             label_maxlfq = value_maxlfq[i] / max_max_lfq
             dico_final[seq[i]] =  label_maxlfq
 
-        df_final = pd.DataFrame.from_dict(dico_final, orient='index',
+        df_flyer = pd.DataFrame.from_dict(dico_final, orient='index',
                                           columns=['Value MaxLFQ'])
-        df_final['Sequences'] = df_final.index
-        df_final = df_final.reset_index()
-        df_final = df_final[['Sequences', 'Value MaxLFQ']]
-        df_final.to_csv('ISA_data/datasets/df_flyer_zeno_reg.csv', index=False)
-        df_non_flyer.to_csv('ISA_data/datasets/df_non_flyer_zeno_reg.csv', index=False)
+        df_flyer['Sequences'] = df_flyer.index
+        df_flyer = df_flyer.reset_index()
+        df_flyer = df_flyer[['Sequences', 'Value MaxLFQ']]
+
+
+        #split
+        #split
+        list_train_split = []
+        list_val_split = []
+        flyer_count = df_flyer.shape[0]
+        list_train_split.append(df_flyer.iloc[:int(flyer_count * frac_split[0]), :])
+        list_val_split.append(df_flyer.iloc[int(flyer_count * frac_split[0]):, :])
+        list_train_split.append(df_non_flyer.iloc[:int(flyer_count * frac_split[0] * frac_no_fly_train), :])
+        list_val_split.append(
+            df_non_flyer.iloc[df_non_flyer.shape[0] - int(flyer_count * frac_split[1] * frac_no_fly_test):, :])
+
+        df_train = pd.concat(list_train_split).sample(frac=1, random_state=manual_seed)  # shuffle
+        df_test = pd.concat(list_val_split).sample(frac=1, random_state=manual_seed)
+        df_train.to_csv(output_dataset_train_path, index=False)
+        df_test.to_csv(output_dataset_test_path, index=False)
+
+
 
     else :
 
@@ -112,4 +170,8 @@ def build_dataset(coverage_treshold = 20, min_peptide = 4, f_name='out_df.csv',i
 
 
 if __name__ == '__main__':
-    build_dataset()
+    args = load_args_generate()
+    build_dataset(coverage_threshold=args.coverage_threshold, min_peptide=args.min_peptide,
+                  input_path=args.diann_report_matrix_path,label_type=args.label_type,
+                  output_dataset_train_path=args.output_dataset_train_path
+                  ,output_dataset_test_path=args.output_dataset_test_path)

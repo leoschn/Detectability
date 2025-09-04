@@ -73,6 +73,6 @@ if __name__=='__main__':
     last_row = prob_no_flyer.shape[0]-1
     ind = int(100*last_row/args.percentage_to_drop)
     sliced_seq = prob_no_flyer.iloc[ind:-1]
-    library_sliced = lib.join(other=sliced_seq.set_index('Sequences'),on='Stripped.Sequence',how='inner')
-    library_sliced = library_sliced.drop(columns='Probability no flyer')
-    library_sliced.to_parquet(args.output_lib_path,index=False)
+    library_reduced = lib.join(other=sliced_seq.set_index('Sequences'),on='Stripped.Sequence',how='inner')
+    library_reduced = library_reduced.drop(columns='Probability no flyer')
+    library_reduced.to_parquet(args.output_lib_path,index=False)
