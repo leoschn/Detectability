@@ -143,16 +143,7 @@ def build_dataset(coverage_treshold, min_peptide, output_dataset_train_path,outp
     df_non_flyer=df_non_flyer[['Sequences']].drop_duplicates()
     df_non_flyer['Classes MaxLFQ'] =0
 
-
-    #Flyer
-    # df_filtered = df[df['Proteotypic']==True]
-    # df_filtered = df[df['Contains Cystein'] == False]
-    # df_filtered = df_filtered[df_filtered['Coverage']>=coverage_treshold]
-    # df_filtered = df_filtered[df_filtered['Miscleavage']==0]
-    # peptide_count=df_filtered.groupby(["Protein.Names"]).size().reset_index(name='counts')
-    # filtered_sequence = peptide_count[peptide_count['counts']>=min_peptide]["Protein.Names"]
-    # df_filtered = df_filtered[df_filtered["Protein.Names"].isin(filtered_sequence.to_list())]
-
+    #compute labels and split datasets
     df_grouped = df_flyer.groupby("Protein.Names")
     dico_final={}
 
@@ -276,6 +267,6 @@ def build_dataset(coverage_treshold, min_peptide, output_dataset_train_path,outp
 if __name__ == '__main__':
     args = load_args_generate()
     build_dataset(coverage_threshold=args.coverage_threshold, min_peptide=args.min_peptide,
-                  input_path=args.diann_report_matrix_path,label_type=args.label_type,
-                  output_dataset_train_path=args.output_dataset_train_path
-                  ,output_dataset_test_path=args.output_dataset_test_path)
+                  input_id=args.input_diann, input_fasta=args.input_fasta,label_type=args.label_type,
+                  output_dataset_train_path=args.output_dataset_train_path,
+                  output_dataset_test_path=args.output_dataset_test_path)

@@ -18,12 +18,13 @@ def load_args_reduce():
 def load_args_generate():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--diann_report_matrix_path', type=str, default='input_data/report_matrix.tsv')
+    parser.add_argument('--input_diann', type=str, default='input_data/report.tsv')
+    parser.add_argument('--input_fasta', type=str, default='input_data/full_proteome.fasta')
     parser.add_argument('--label_type', type=str, default='Binary')
     parser.add_argument('--output_dataset_train_path', type=str, default='output/dataset_train.csv')
     parser.add_argument('--output_dataset_test_path', type=str, default='output/dataset_test.csv')
     parser.add_argument('--train_test_split', type=tuple, default=(0.8,0.2))
-    parser.add_argument('--coverage_threshold', type=float, default=20)
+    parser.add_argument('--coverage_threshold', type=float, default=20.)
     parser.add_argument('--min_peptide', type=int, default=4)
 
 
