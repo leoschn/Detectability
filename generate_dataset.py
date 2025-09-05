@@ -35,7 +35,6 @@ def tryptic_digest(sequence, miscleavages=0, min_length=0, max_length=10000):
 
 def digest_fasta(input_fasta, miscleavages=0, min_length=0, max_length=10000):
     all_peptides = []
-
     for record in SeqIO.parse(input_fasta, "fasta"):
         seq = str(record.seq)
         peptides = tryptic_digest(seq, miscleavages=miscleavages, min_length=min_length, max_length=max_length)
@@ -57,7 +56,7 @@ def load_fasta_sequences(fasta_file):
 # Fonction pour compter les sites de clivage (lysine 'K' ou arginine 'R')
 def count_cleavages(peptide_sequence):
     # Compter le nombre de résidus K ou R dans la séquence du peptide
-    return peptide_sequence[:-1].count('K') + peptide_sequence[:-1].count('R') -peptide_sequence[:-1].count('KP') - peptide_sequence[:-1].count('RP')
+    return peptide_sequence[:-1].count('K') + peptide_sequence[:-1].count('R') -peptide_sequence.count('KP') - peptide_sequence.count('RP')
 
 
 def find_proteotypic_peptides(peptide_list, fasta_file):
@@ -106,7 +105,7 @@ def calculate_sequence_coverage(fasta_file, peptide_list):
 
     return protein_coverage
 
-def build_dataset(coverage_treshold, min_peptide, output_dataset_train_path,output_dataset_test_path,input_fasta,
+def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,output_dataset_test_path,input_fasta,
                   input_id, label_type,frac_split,frac_no_fly_train,frac_no_fly_test,manual_seed):
     peptides_identification = pd.read_csv(input_id, sep="\t")
     #build dataset
@@ -126,7 +125,7 @@ def build_dataset(coverage_treshold, min_peptide, output_dataset_train_path,outp
     filtered_sequence = peptide_count[peptide_count['counts'] >= min_peptide]["Protein.Names"]
     df_flyer = df_flyer[df_flyer["Protein.Names"].isin(filtered_sequence.to_list())]
     df_flyer=df_flyer[df_flyer['Proteotypic']==True]
-    df_flyer = df_flyer[df_flyer['Coverage'] >= coverage_treshold]
+    df_flyer = df_flyer[df_flyer['Coverage'] >= coverage_threshold]
     df_flyer = df_flyer[df_flyer['Miscleavage'] == 0]
     df_flyer = df_flyer[df_flyer['Contains Cystein'] == False]
 
