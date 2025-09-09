@@ -18,14 +18,17 @@ def load_args_reduce():
 def load_args_generate():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input_diann', type=str, default='input_data/report.tsv')
-    parser.add_argument('--input_fasta', type=str, default='input_data/full_proteome.fasta')
-    parser.add_argument('--label_type', type=str, default='Binary')
+    parser.add_argument('--input_diann', type=str, default='input_data/zeno/report.tsv')
+    parser.add_argument('--input_fasta', type=str, default='input_data/zeno/250325_17_proteomes_gut_std_ozyme_+_conta.fasta')
+    parser.add_argument('--label_type', type=str, default='Regression')
+    parser.add_argument('--frac_no_fly_train', type=float, default=1.)
+    parser.add_argument('--frac_no_fly_test', type=float, default=1.)
+    parser.add_argument('--frac_split', type=tuple, default=(0.8,0.2))
     parser.add_argument('--output_dataset_train_path', type=str, default='output/dataset_train.csv')
     parser.add_argument('--output_dataset_test_path', type=str, default='output/dataset_test.csv')
-    parser.add_argument('--train_test_split', type=tuple, default=(0.8,0.2))
-    parser.add_argument('--coverage_threshold', type=float, default=20.)
+    parser.add_argument('--coverage_threshold', type=float, default=0.2)
     parser.add_argument('--min_peptide', type=int, default=4)
+    parser.add_argument('--manual_seed', type=int, default=42)
 
 
     args = parser.parse_args()
