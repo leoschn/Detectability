@@ -114,10 +114,7 @@ def find_proteotypic_peptides(peptide_list, fasta_file):
     # Dictionnaire pour associer chaque peptide aux protéines où il apparaît
     peptide_to_protein = defaultdict(set)
     # Une seule boucle pour vérifier tous les peptides dans chaque protéine
-    i=0
     for protein_id, sequence in protein_sequences.items():
-        i+=1
-        print(i,'/',len(protein_sequences.items()))
         for peptide in peptide_list:
             if peptide in sequence:
                 peptide_to_protein[peptide].add(protein_id)
@@ -249,6 +246,7 @@ def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,out
     print('Computing coverage')
     protein_coverage = multiple_protein_coverage(input_fasta, id_peptide_list)
     df_flyer = peptides_identification[['Stripped.Sequence', 'Protein.Ids',max_lfq_col]].drop_duplicates()
+    df_flyer = df_flyer[~df_flyer['Stripped.Sequence'].str.contains('X')]  # remove id with unknown aminio acid
     print('Filtering peptides')
     df_flyer['Contains Cystein']=df_flyer['Stripped.Sequence'].str.contains('C')
     df_flyer['Proteotypic']= df_flyer['Stripped.Sequence'].isin(proteotypic_peptides)
@@ -272,6 +270,7 @@ def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,out
     #No flyer
 
     df_non_flyer = pd.DataFrame(non_flyer_list, columns=['Stripped.Sequence'])
+    df_non_flyer = df_non_flyer[~df_non_flyer['Stripped.Sequence'].str.contains('X')]
     df_non_flyer['Contains Cystein']=df_non_flyer['Stripped.Sequence'].str.contains('C')
     df_non_flyer['Miscleavage'] = df_non_flyer['Stripped.Sequence'].apply(count_cleavages)
     df_non_flyer = df_non_flyer[df_non_flyer['Contains Cystein']==False]
@@ -279,6 +278,8 @@ def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,out
     df_non_flyer['Sequences'] = df_non_flyer['Stripped.Sequence']
     df_non_flyer=df_non_flyer[['Sequences']].drop_duplicates()
     df_non_flyer['Label MaxLFQ'] =0
+    df_non_flyer['Protein.Ids']='ND'
+    df_non_flyer = df_non_flyer[['Sequences', 'Label MaxLFQ', "Protein.Ids"]]
 
     #compute labels and split datasets
     df_grouped = df_flyer.groupby("Protein.Ids")
@@ -298,13 +299,13 @@ def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,out
                 else:
                     label_maxlfq = 3
 
-                dico_final[seq[i]] = label_maxlfq
+                dico_final[seq[i]] = [label_maxlfq,group_name]
 
         df_flyer = pd.DataFrame.from_dict(dico_final, orient='index',
-                                          columns=['Label MaxLFQ'])
+                                          columns=['Label MaxLFQ',"Protein.Ids"])
         df_flyer['Sequences'] = df_flyer.index
         df_flyer = df_flyer.reset_index()
-        df_flyer = df_flyer[['Sequences', 'Label MaxLFQ']]
+        df_flyer = df_flyer[['Sequences', 'Label MaxLFQ',"Protein.Ids"]]
 
         # stratified split
         list_train_split = []
@@ -334,11 +335,11 @@ def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,out
     elif label_type=='Binary':
 
         # iterate over each group
-        df_flyer=df_flyer[['Sequences']]
+        df_flyer=df_flyer[['Sequences',"Protein.Ids"]]
         df_flyer['Label MaxLFQ']=1
         df_flyer = df_flyer.reset_index()
-        df_flyer = df_flyer[['Sequences', 'Label MaxLFQ']]
-        df_non_flyer=df_non_flyer[['Sequences', 'Label MaxLFQ']]
+        df_flyer = df_flyer[['Sequences', 'Label MaxLFQ',"Protein.Ids"]]
+
 
 
         #split
@@ -368,13 +369,13 @@ def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,out
             max_max_lfq = max(value_maxlfq)
             for i in range(len(seq)):
                 label_maxlfq = value_maxlfq[i] / max_max_lfq
-                dico_final[seq[i]] =  label_maxlfq
+                dico_final[seq[i]] =  [label_maxlfq,group_name]
 
         df_flyer = pd.DataFrame.from_dict(dico_final, orient='index',
-                                          columns=['Label MaxLFQ'])
+                                          columns=['Label MaxLFQ',"Protein.Ids"])
         df_flyer['Sequences'] = df_flyer.index
         df_flyer = df_flyer.reset_index()
-        df_flyer = df_flyer[['Sequences', 'Label MaxLFQ']]
+        df_flyer = df_flyer[['Sequences', 'Label MaxLFQ',"Protein.Ids"]]
 
         #split
         list_train_split = []

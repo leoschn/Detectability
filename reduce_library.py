@@ -8,10 +8,11 @@ from dlomix.data import DetectabilityDataset
 from config import load_args_reduce
 
 
-def apply_model(model_path, list_seq):
+def apply_model(model_path, model_type, list_seq):
+    #Only compatible with binary and regression model
     data = pd.DataFrame(list_seq, columns=['Sequences'])
-    data['Classes'] = [0] * data.shape[0]
-    data['Proteins'] = [0] * data.shape[0]
+    data['Labels MaxLFQ'] = [0] * data.shape[0]
+    data['Protein.Ids'] = [0] * data.shape[0]
     data.to_csv('temp.csv', index=False)
 
     print('Initialising model')
@@ -32,13 +33,13 @@ def apply_model(model_path, list_seq):
 
     print('Initialising dataset')
     ## Data init
-    detectability_data = DetectabilityDataset(data_source='temp.csv',
-                                              val_data_source='temp.csv',
+    detectability_data = DetectabilityDataset(data_source='temp/temp.csv',
+                                              val_data_source='temp/temp.csv',
                                               data_format='csv',
                                               max_seq_len=max_pep_length,
-                                              label_column="Classes",
+                                              label_column="Labels MaxLFQ",
                                               sequence_column="Sequences",
-                                              dataset_columns_to_keep=['Proteins'],
+                                              dataset_columns_to_keep=['Protein.Ids'],
                                               batch_size=batch_size,
                                               with_termini=False,
                                               alphabet=aa_to_int_dict)
@@ -48,13 +49,20 @@ def apply_model(model_path, list_seq):
 
     print('Applying model')
     ## Applying model
-    predictions = model.predict(val_data)
-    label_binary = np.argmax(predictions, axis=1)
-    result = pd.DataFrame(
-        {'Sequences': seq, 'Probability no flyer': predictions[:, 0], 'Probability flyer': predictions[:, 1],
-         'Predicted class': label_binary})
-
+    if args.model_type == 'Binary':
+        predictions = model.predict(val_data)
+        label_binary = np.argmax(predictions, axis=1)
+        result = pd.DataFrame(
+            {'Sequences': seq, 'Prediction': predictions[:, 1]}) #Flyer probability
+    elif args.model_type =='Regression':
+        predictions = model.predict(val_data)
+        result = pd.DataFrame(
+            {'Sequences': seq,
+             'Prediction': predictions}) #Flyer intensity
+    else :
+        raise Exception('Model type not supported')
     os.remove('temp.csv')
+
     return result
 
 def load_lib(path):
@@ -67,12 +75,12 @@ if __name__=='__main__':
     args = load_args_reduce()
     lib = load_lib(path=args.base_lib_path)
     seq = pd.unique(lib['Stripped.Sequence'])
-    results = apply_model(model_path=args.model_path,list_seq=seq)
-    prob_no_flyer = results[['Sequences', 'Probability no flyer']]
-    prob_no_flyer = prob_no_flyer.sort_values(by=['Probability no flyer'],ascending=False)
-    last_row = prob_no_flyer.shape[0]-1
-    ind = int(100*last_row/args.percentage_to_drop)
-    sliced_seq = prob_no_flyer.iloc[ind:-1]
-    library_reduced = lib.join(other=sliced_seq.set_index('Sequences'),on='Stripped.Sequence',how='inner')
-    library_reduced = library_reduced.drop(columns='Probability no flyer')
+    results = apply_model(model_path=args.model_path, model_type=args.model_type, list_seq=seq)
+    flyer_index = results[['Sequences', 'Prediction']]
+    flyer_index = flyer_index.sort_values(by=['Prediction'],ascending=False) #A vérifier
+    last_row = flyer_index.shape[0]-1
+    ind = int(100*last_row/(100-args.percentage_to_drop))
+    reduced_seq = flyer_index.iloc[:ind]
+    library_reduced = lib.join(other=reduced_seq.set_index('Sequences'),on='Stripped.Sequence',how='inner')
+    library_reduced = library_reduced.drop(columns='Prediction')
     library_reduced.to_parquet(args.output_lib_path,index=False)
