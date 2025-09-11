@@ -160,7 +160,7 @@ if __name__ == "__main__":
                                                    verbose=1,
                                                    patience=5)
 
-    model_checkpoint_FT = tf.keras.callbacks.ModelCheckpoint(filepath=args.path_saved_model,
+    model_checkpoint_FT = tf.keras.callbacks.ModelCheckpoint(filepath=args.save_model_path,
                                                              monitor='val_loss',
                                                              mode='min',
                                                              verbose=1,
@@ -188,10 +188,7 @@ if __name__ == "__main__":
 
     # Loading best model weights
 
-    model_save_path_FT = 'output/weights/new_fine_tuned_model/fine_tuned_model_weights_detectability_combined' #model fined tuned on ISA data
-    model_save_path_FT = 'pretrained_model/original_detectability_fine_tuned_model_FINAL' #base model
-
-    fine_tuned_model.load_weights(args.path_saved_model)
+    fine_tuned_model.load_weights(args.save_model_path)
 
     predictions_FT = fine_tuned_model.predict(fine_tune_data.tensor_val_data)
 

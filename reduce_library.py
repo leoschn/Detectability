@@ -11,14 +11,13 @@ from config import load_args_reduce
 def apply_model(model_path, model_type, list_seq):
     #Only compatible with binary and regression model
     data = pd.DataFrame(list_seq, columns=['Sequences'])
-    data['Labels MaxLFQ'] = [0] * data.shape[0]
+    data['Label MaxLFQ'] = [0] * data.shape[0]
     data['Protein.Ids'] = [0] * data.shape[0]
     data.to_csv('temp.csv', index=False)
 
     print('Initialising model')
     ## Model init
     total_num_classes = len(CLASSES_LABELS)
-    input_dimension = len(alphabet)
     num_cells = 64
 
     model = DetectabilityModel(num_units=num_cells, num_clases=total_num_classes)
@@ -33,13 +32,21 @@ def apply_model(model_path, model_type, list_seq):
 
     print('Initialising dataset')
     ## Data init
+
+    lib = load_lib(args.base_lib_path)
+    seq = pd.unique(lib['Stripped.Sequence'])
+    data = pd.DataFrame(seq, columns=['Sequences'])
+    data = data[~data['Sequences'].str.contains('X')]
+    data['Label MaxLFQ'] = [0] * data.shape[0]
+    data.to_csv('temp/temp.csv', index=False)
+
     detectability_data = DetectabilityDataset(data_source='temp/temp.csv',
                                               val_data_source='temp/temp.csv',
                                               data_format='csv',
                                               max_seq_len=max_pep_length,
-                                              label_column="Labels MaxLFQ",
+                                              label_column="Label MaxLFQ",
                                               sequence_column="Sequences",
-                                              dataset_columns_to_keep=['Protein.Ids'],
+                                              dataset_columns_to_keep=None,
                                               batch_size=batch_size,
                                               with_termini=False,
                                               alphabet=aa_to_int_dict)
@@ -51,7 +58,6 @@ def apply_model(model_path, model_type, list_seq):
     ## Applying model
     if args.model_type == 'Binary':
         predictions = model.predict(val_data)
-        label_binary = np.argmax(predictions, axis=1)
         result = pd.DataFrame(
             {'Sequences': seq, 'Prediction': predictions[:, 1]}) #Flyer probability
     elif args.model_type =='Regression':
@@ -61,7 +67,7 @@ def apply_model(model_path, model_type, list_seq):
              'Prediction': predictions}) #Flyer intensity
     else :
         raise Exception('Model type not supported')
-    os.remove('temp.csv')
+    os.remove('temp/temp.csv')
 
     return result
 
@@ -79,7 +85,7 @@ if __name__=='__main__':
     flyer_index = results[['Sequences', 'Prediction']]
     flyer_index = flyer_index.sort_values(by=['Prediction'],ascending=False) #A vérifier
     last_row = flyer_index.shape[0]-1
-    ind = int(100*last_row/(100-args.percentage_to_drop))
+    ind = int((100-args.percentage_to_drop)*last_row/100)
     reduced_seq = flyer_index.iloc[:ind]
     library_reduced = lib.join(other=reduced_seq.set_index('Sequences'),on='Stripped.Sequence',how='inner')
     library_reduced = library_reduced.drop(columns='Prediction')
