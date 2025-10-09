@@ -14,7 +14,7 @@ from dlomix.constants import CLASSES_LABELS, aa_to_int_dict
 from dlomix.data import DetectabilityDataset
 from dlomix.reports.DetectabilityReport import DetectabilityReport
 from config import load_args_finetune
-
+import os
 
 
 
@@ -123,17 +123,17 @@ if __name__ == "__main__":
         fine_tuned_model.decoder.decoder_dense = tf.keras.layers.Dense(1, activation=None,kernel_initializer=initializers.GlorotNormal(seed=None),
     bias_initializer=initializers.Zeros())
         fine_tuned_model.build((None, 40))
-        #
-        # base_arch = DetectabilityModel(num_units=num_cells,
-        #                                num_clases=4)
-        # base_arch.load_weights(args.path_model)
-        #
-        # # partially loading pretrained weights (multiclass training)
-        # base_arch.build((None, 40))
-        # weights_list = base_arch.get_weights()
-        # weights_list[-1] = np.array([0.], dtype=np.float32)
-        # weights_list[-2] = np.zeros((128, 1), dtype=np.float32)
-        # fine_tuned_model.set_weights(weights_list)
+
+        base_arch = DetectabilityModel(num_units=num_cells,
+                                       num_clases=4)
+        base_arch.load_weights(args.path_model)
+
+        # partially loading pretrained weights (multiclass training)
+        base_arch.build((None, 40))
+        weights_list = base_arch.get_weights()
+        weights_list[-1] = np.array([0.], dtype=np.float32)
+        weights_list[-2] = np.zeros((128, 1), dtype=np.float32)
+        fine_tuned_model.set_weights(weights_list)
 
     else:
         raise Exception('Task type not supported')
@@ -226,11 +226,10 @@ if __name__ == "__main__":
         report_FT.generate_report()
 
     elif args.task=='Binary':
-        pass
+        df = pd.DataFrame(data={'Classes':test_targets_FT,'Predictions':predictions_FT[:,1],'Predicted Classes':np.argmax(predictions_FT,axis=1)})
+        # plot_confusion_matrix_binary(df,os.path.join(args.report_path,'confusion_matrix.png'))
+        # plot_roc_binary(df,os.path.join(args.report_path,'training_matrix.png'))
+        # plot_and_save_metrics(history_fine_tuned,os.path.join(args.report_path,'training_matrix.png'))
+
     elif args.task=='Regression':
         pass
-
-#[14 11  0  6 10 12  1  8  4  7 16 12 20 10 15  0  0  0  0  0  0  0  0  0
-   # 0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  0]
-
-   # QMOGLNAIEHSNYLR
