@@ -42,7 +42,7 @@ def plot_and_save_metrics(history, base_path):
 def plot_confusion_matrix_binary(df, base_path):
     conf_matrix = confusion_matrix(
         df["Classes"],
-        df["Predicted classes"],
+        df["Predicted Classes"],
     )
 
     if not exists(base_path):
@@ -62,7 +62,7 @@ def plot_confusion_matrix_binary(df, base_path):
 def plot_roc_binary(df,base_path):
     fpr, tpr, thresholds = roc_curve(
         np.array(df["Classes"]),
-        np.array(df["Prob flyer"]),
+        np.array(df["Predictions"]),
     )
     AUC_score = auc(fpr, tpr)
 
@@ -82,6 +82,24 @@ def plot_roc_binary(df,base_path):
     )
 
     plt.savefig(save_path, bbox_inches="tight", dpi=90)
+    plt.close()
+
+def plot_scatter(df,base_path):
+    plt.scatter(
+        df["Classes"],
+        df["Predictions"],s=0.25,alpha=0.3
+    )
+    plt.title(
+        "Scatter plot of detectability (log of relative intensity)",
+        y=1.04,
+        fontsize=10,
+    )
+    plt.ylabel("Predicted detectability")
+    plt.xlabel("True detectability")
+    save_path = join(
+        base_path, "scatter_plots"
+    )
+    plt.savefig(save_path)
     plt.close()
 
 if __name__ == "__main__":
@@ -154,17 +172,11 @@ if __name__ == "__main__":
                                               alphabet=aa_to_int_dict)
 
 
-    # compile the model  with the optimizer and the metrics we want to use.
-    callback_FT = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                   mode='min',
-                                                   verbose=1,
-                                                   patience=5)
-
     model_checkpoint_FT = tf.keras.callbacks.ModelCheckpoint(filepath=args.save_model_path,
                                                              monitor='val_loss',
                                                              mode='min',
                                                              verbose=1,
-                                                             save_best_only=True,
+                                                             save_best_only=False,
                                                              save_weights_only=True)
     opti = tf.keras.optimizers.legacy.Adagrad()
 
@@ -184,7 +196,7 @@ if __name__ == "__main__":
     history_fine_tuned = fine_tuned_model.fit(fine_tune_data.tensor_train_data,
                                               validation_data=fine_tune_data.tensor_val_data,
                                               epochs=args.epochs,
-                                              callbacks=[callback_FT, model_checkpoint_FT])
+                                              callbacks=[model_checkpoint_FT])
 
     # Loading best model weights
 
@@ -209,6 +221,8 @@ if __name__ == "__main__":
 
     # Since the detectabiliy report expects the true labels in one-hot encoded format, we expand them here.
 
+    if not(os.path.exists(args.report_path)):
+        os.makedirs(args.report_path)
 
     if args.task=='Multi_class' :
         num_classes = np.max(test_targets_FT) + 1
@@ -227,9 +241,12 @@ if __name__ == "__main__":
 
     elif args.task=='Binary':
         df = pd.DataFrame(data={'Classes':test_targets_FT,'Predictions':predictions_FT[:,1],'Predicted Classes':np.argmax(predictions_FT,axis=1)})
-        # plot_confusion_matrix_binary(df,os.path.join(args.report_path,'confusion_matrix.png'))
-        # plot_roc_binary(df,os.path.join(args.report_path,'training_matrix.png'))
-        # plot_and_save_metrics(history_fine_tuned,os.path.join(args.report_path,'training_matrix.png'))
+        plot_confusion_matrix_binary(df,args.report_path)
+        plot_roc_binary(df,args.report_path)
+        plot_and_save_metrics(history_fine_tuned,args.report_path)
 
     elif args.task=='Regression':
-        pass
+        df = pd.DataFrame(data={'Classes': test_targets_FT, 'Predictions': predictions_FT[:, 0]})
+        plot_scatter(df, args.report_path)
+        plot_and_save_metrics(history_fine_tuned, args.report_path)
+

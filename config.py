@@ -35,13 +35,13 @@ def load_args_generate():
     # Train/Test split size ratio, independently of class repartition
     parser.add_argument('--frac_split', type=tuple, default=(0.8,0.2))
     # Saving path for the train dataset
-    parser.add_argument('--output_dataset_train_path', type=str, default='output/dataset_train_regression_10.csv')
+    parser.add_argument('--output_dataset_train_path', type=str, default='output/dataset_train_regression_14.csv')
     # Saving path for the test dataset
-    parser.add_argument('--output_dataset_test_path', type=str, default='output/dataset_test_regression_10.csv')
+    parser.add_argument('--output_dataset_test_path', type=str, default='output/dataset_test_regression_14.csv')
     # Minimal proportion of the protein sequence covered by identified peptides to pass filter
     parser.add_argument('--coverage_threshold', type=float, default=0.2)
     # Minimal number of peptide identified by protein to pass filter
-    parser.add_argument('--min_peptide', type=int, default=10)
+    parser.add_argument('--min_peptide', type=int, default=14)
     # Seed for dataset shuffling
     parser.add_argument('--manual_seed', type=int, default=42)
 
@@ -58,18 +58,18 @@ def load_args_finetune():
     # Type of training (must be compatible with dataset type)
     parser.add_argument('--task', type=str, default='Regression')
     # Path to the train dataset
-    parser.add_argument('--path_dataset_train', type=str, default='output/dataset_train_regression.csv')
+    parser.add_argument('--path_dataset_train', type=str, default='output/dataset_train_regression_14.csv')
     # Path to validation dataset
-    parser.add_argument('--path_dataset_val', type=str, default='output/dataset_test_regression.csv')
+    parser.add_argument('--path_dataset_val', type=str, default='output/dataset_test_regression_14.csv')
     # Path to pretrained model weights
     parser.add_argument('--path_model', type=str, default='pretrained_model/original_detectability_fine_tuned_model_FINAL')
     # Path to save fine-tuned model weights
-    parser.add_argument('--save_model_path', type=str, default='output/model/saved_model_regression_4.pt')
+    parser.add_argument('--save_model_path', type=str, default='output/model/saved_model_regression_test.pt')
     parser.add_argument('--batch_size', type=int, default=16)
     # Path to the training and validation metrics report
-    parser.add_argument('--report_path', type=str, default='output/report_path_regression_4')
+    parser.add_argument('--report_path', type=str, default='output/report_path_regression_test')
     # Name of the model in training/validation report
-    parser.add_argument('--model_name', type=str, default='model_finetuned_regression_4')
+    parser.add_argument('--model_name', type=str, default='model_finetuned_regression_test')
 
 
     args = parser.parse_args()
