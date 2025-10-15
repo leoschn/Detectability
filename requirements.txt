@@ -1,0 +1,13 @@
+matplotlib~=3.10.6
+numpy~=1.26.4
+pandas~=2.3.2
+tensorflow~=2.15.1
+keras~=2.15.0
+scikit-learn~=1.7.2
+dlomix~=0.1.5
+pyarrow~=21.0.0
+pyahocorasick~=2.2.0
+rpy2~=3.6.3
+biopython~=1.85
+seaborn~=0.13.2
+setuptools~=68.2.1
