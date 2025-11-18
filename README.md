@@ -1,7 +1,7 @@
 # Detectability extraction and fine tuning
 
 Implementation of Generation of peptide detectability datasets from
-single DIA spectra for prediction model fine-tuning paper. It includes :
+single DIA experiment for prediction model fine-tuning paper. It includes :
 - Extraction of detectability dataset from [DiaNN](https://github.com/vdemichev/DiaNN) analysis of a single DIA run
 - Finetuning of [pFly](https://github.com/wilhelm-lab/dlomix) model with binary categorical or regression task
 - reduction of a DiaNN search library based on predicted detectability
