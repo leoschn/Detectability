@@ -7,13 +7,13 @@ from dlomix.constants import CLASSES_LABELS, alphabet, aa_to_int_dict
 from dlomix.data import DetectabilityDataset
 from config import load_args_reduce
 
-def reduce_lib_random(lib,prop_to_keep,output_lib_path):
+def reduce_lib_random(lib,per_to_drop,output_lib_path):
     lib,_ = load_lib(path=lib)
 
     lib = lib[~lib['Stripped.Sequence'].str.contains('X')]
     lib =lib[~lib['Stripped.Sequence'].str.contains('U')]
     seq = pd.unique(lib['Stripped.Sequence'])
-    seq_random = np.random.choice(seq, size=int(seq.shape[0]*prop_to_keep), replace=False)
+    seq_random = np.random.choice(seq, size=int(seq.shape[0]*(100-per_to_drop)/100), replace=False)
     df = pd.DataFrame(seq_random,columns=['Stripped.Sequence'])
     library_reduced = lib.join(other=df.set_index('Stripped.Sequence'), on='Stripped.Sequence', how='inner')
     library_reduced.to_parquet(output_lib_path, index=False)
@@ -95,7 +95,7 @@ def filter_lib(results,args,lib,schema):
 
     flyer_index = results[['Sequences', 'Prediction']]
     flyer_index = flyer_index.sort_values(by=['Prediction'], ascending=False)  # A vérifier
-    last_row = flyer_index.shape[0] - 1
+    last_row = flyer_index.shape[0]
     ind = int((100 - args.percentage_to_drop) * last_row / 100)
     reduced_seq = flyer_index.iloc[:ind]
     library_reduced = lib.join(other=reduced_seq.set_index('Sequences'), on='Stripped.Sequence', how='inner')
@@ -112,12 +112,24 @@ def load_lib(path):
 
 def main():
     args = load_args_reduce()
-    lib,schema = load_lib(path=args.base_lib_path)
-    seq = pd.unique(lib['Stripped.Sequence'])
-    results = apply_model(args=args, list_seq=seq)
-    filter_lib(results=results,args=args,lib=lib,schema=schema)
+    # lib, schema = load_lib(path=args.base_lib_path)
+    # seq = pd.unique(lib['Stripped.Sequence'])
+    # for replicate in range(1,6):
+    #     args.model_path = f'output_review/zeno/model/saved_model_application_binary_{replicate}.pt'
+    #     results = apply_model(args=args, list_seq=seq)
+    #     for drop_perc in [0.,10.,20.,30.,40.,50.,60.,70.,80.,90.]   :
+    #         args.percentage_to_drop = drop_perc
+    #         args.output_lib_path = f'output_review/zeno/application_lib/lib_reduced_by_{int(drop_perc)}_{replicate}.parquet'
+    #         filter_lib(results=results,args=args,lib=lib,schema=schema)
+
+    # args.model_path = 'pretrained_model/original_detectability_fine_tuned_model_FINAL'
+    # args.model_type = 'Multiclass'
+    # results = apply_model(args=args, list_seq=seq)
+    for replicate in range(1,6):
+        for drop_perc in [0.,10.,20.,30.,40.,50.,60.,70.,80.,90.]  :
+            reduce_lib_random(args.base_lib_path, drop_perc,
+                              f'output_review/application/application_lib/lib_reduced_by_{int(drop_perc)}_random_{replicate}.parquet')
+
 
 if __name__=='__main__':
-    # for prop in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
-    #     # reduce_lib_random('input_data/zeno/250723_proteines_ribosomales_chaperons_microbiote_lib.parquet',prop,'random_lib/random_lib_no_UX_{}.parquet'.format(prop))
     main()

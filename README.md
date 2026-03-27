@@ -12,6 +12,15 @@ Compatible python package can be installed using :
 
     pip install -r requirements.txt
 
+R and iq R package should also be installed :
+
+    sudo apt update
+    sudo apt install -y r-base
+    R
+    install.packages("iq", repos="https://cloud.r-project.org")
+
+
+
 ## Usage
 
 The following command will extract detectability from a DIANN report and create a finetuning dataset based on it.

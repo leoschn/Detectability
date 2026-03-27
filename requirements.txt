@@ -10,4 +10,4 @@ pyahocorasick~=2.2.0
 rpy2~=3.6.3
 biopython~=1.85
 seaborn~=0.13.2
-setuptools~=68.2.1
+setuptools~=78.1.1
