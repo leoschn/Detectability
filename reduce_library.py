@@ -112,23 +112,10 @@ def load_lib(path):
 
 def main():
     args = load_args_reduce()
-    # lib, schema = load_lib(path=args.base_lib_path)
-    # seq = pd.unique(lib['Stripped.Sequence'])
-    # for replicate in range(1,6):
-    #     args.model_path = f'output_review/zeno/model/saved_model_application_binary_{replicate}.pt'
-    #     results = apply_model(args=args, list_seq=seq)
-    #     for drop_perc in [0.,10.,20.,30.,40.,50.,60.,70.,80.,90.]   :
-    #         args.percentage_to_drop = drop_perc
-    #         args.output_lib_path = f'output_review/zeno/application_lib/lib_reduced_by_{int(drop_perc)}_{replicate}.parquet'
-    #         filter_lib(results=results,args=args,lib=lib,schema=schema)
-
-    # args.model_path = 'pretrained_model/original_detectability_fine_tuned_model_FINAL'
-    # args.model_type = 'Multiclass'
-    # results = apply_model(args=args, list_seq=seq)
-    for replicate in range(1,6):
-        for drop_perc in [0.,10.,20.,30.,40.,50.,60.,70.,80.,90.]  :
-            reduce_lib_random(args.base_lib_path, drop_perc,
-                              f'output_review/application/application_lib/lib_reduced_by_{int(drop_perc)}_random_{replicate}.parquet')
+    lib, schema = load_lib(path=args.base_lib_path)
+    seq = pd.unique(lib['Stripped.Sequence'])
+    results = apply_model(args=args, list_seq=seq)
+    filter_lib(results=results,args=args,lib=lib,schema=schema)
 
 
 if __name__=='__main__':

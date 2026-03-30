@@ -471,30 +471,16 @@ def build_dataset(coverage_threshold, min_peptide, output_dataset_train_path,out
 
 if __name__ == '__main__':
     args = load_args_generate()
-    # build_dataset(coverage_threshold=args.coverage_threshold, min_peptide=args.min_peptide,
-    #       input_id=args.input_diann,
-    #       input_fasta=args.input_fasta,
-    #       label_type=args.label_type,
-    #       output_dataset_train_path=args.output_dataset_train_path,
-    #       output_dataset_val_path=args.output_dataset_val_path,
-    #       output_dataset_test_path=args.output_dataset_test_path,
-    #       frac_no_fly=[args.frac_no_fly_train,args.frac_no_fly_val,args.frac_no_fly_test],
-    #       frac_split=args.frac_split,
-    #       manual_seed=args.manual_seed,
-    #       type_quant=args.type_quant,
-    #       min_len_pep=args.min_len_pep)
-    for i in range(4,15):
-        print('mine peptide', i)
-        build_dataset(coverage_threshold=args.coverage_threshold, min_peptide=i,
-              input_id=f'input_data/zeno/ZENO_dataset_report.tsv',
-              input_fasta='input_data/zeno/250325_17_proteomes_gut_std_ozyme_+_conta.fasta',
-              label_type='Regression',
-              output_dataset_train_path=f'output_review/zeno/pep_per_prot/dataset_train_astral_regression_frag_max_{i}.csv',
-              output_dataset_val_path=f'output_review/zeno/pep_per_prot/dataset_val_astral_regression_frag_max_{i}.csv',
-              output_dataset_test_path=f'output_review/zeno/pep_per_prot/dataset_test_astral_regression_frag_max_{i}.csv',
-              frac_no_fly=[1.,1.,1.],
-              frac_split=args.frac_split,
-              manual_seed=42,
-              type_quant='frag',
-              min_len_pep=args.min_len_pep,
-              reduce='max')
+    build_dataset(coverage_threshold=args.coverage_threshold, min_peptide=args.min_peptide,
+          input_id=args.input_diann,
+          input_fasta=args.input_fasta,
+          label_type=args.label_type,
+          output_dataset_train_path=args.output_dataset_train_path,
+          output_dataset_val_path=args.output_dataset_val_path,
+          output_dataset_test_path=args.output_dataset_test_path,
+          frac_no_fly=[args.frac_no_fly_train,args.frac_no_fly_val,args.frac_no_fly_test],
+          frac_split=args.frac_split,
+          manual_seed=args.manual_seed,
+          type_quant=args.type_quant,
+          min_len_pep=args.min_len_pep)
+
